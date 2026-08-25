@@ -1,0 +1,3 @@
+Vocabulary list derived from Complete HSK Vocabulary (MIT License)
+https://github.com/drkameleon/complete-hsk-vocabulary
+Vietnamese meanings curated/adapted for this product; English glosses from CC-CEDICT via upstream.

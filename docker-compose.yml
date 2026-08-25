@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: hoctiengtrung
+      POSTGRES_PASSWORD: hoctiengtrung
+      POSTGRES_DB: hoctiengtrung
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hoctiengtrung -d hoctiengtrung"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://hoctiengtrung:hoctiengtrung@db:5432/hoctiengtrung
+      JWT_SECRET: change-me-staging-secret
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-local-bootstrap}
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

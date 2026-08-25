@@ -1,0 +1,11 @@
+{
+  "name": "hoctiengtrung",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "cd apps/api && PYTHONPATH=. .venv/Scripts/uvicorn app.main:app --reload --port 8001",
+    "seed": "PYTHONPATH=apps/api apps/api/.venv/Scripts/python scripts/seed_db.py",
+    "smoke": "apps/api/.venv/Scripts/python scripts/smoke_test.py",
+    "db:up": "docker compose up -d db"
+  }
+}

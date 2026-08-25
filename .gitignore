@@ -1,0 +1,14 @@
+node_modules/
+.next/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+apps/api/.env
+*.egg-info/
+.DS_Store
+.tunnel-logs/
+.tunnel-urls
+apps/api/.venv/
+*.log
