@@ -2,6 +2,23 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _normalize_database_url(v: str) -> str:
+    """Render/Neon/Railway: postgres:// or postgresql:// → SQLAlchemy + psycopg2 + SSL."""
+    if not isinstance(v, str):
+        return v
+    url = v.strip()
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://") :]
+    if url.startswith("postgresql://") and "+psycopg2" not in url:
+        url = "postgresql+psycopg2://" + url[len("postgresql://") :]
+    # Managed Postgres (Render) usually requires SSL
+    host_local = "localhost" in url or "127.0.0.1" in url or "@db:" in url
+    if not host_local and "sslmode=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}sslmode=require"
+    return url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -14,14 +31,12 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"
     daily_ai_message_limit: int = 40
+    bootstrap_secret: str = ""
 
     @field_validator("database_url", mode="before")
     @classmethod
     def normalize_database_url(cls, v: str) -> str:
-        # Railway/Neon often provide postgresql:// — SQLAlchemy needs psycopg2 driver
-        if isinstance(v, str) and v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+psycopg2://", 1)
-        return v
+        return _normalize_database_url(v)
 
     @property
     def cors_origin_list(self) -> list[str]:

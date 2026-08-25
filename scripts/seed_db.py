@@ -330,6 +330,8 @@ def seed_vocab(db) -> int:
         )
         existing.add(hanzi)
         added += 1
+        if added % 100 == 0:
+            db.commit()
 
     for item in WORK_VOCAB:
         if item["hanzi"] in existing:
@@ -355,12 +357,15 @@ def seed_scenarios(db) -> int:
 
 
 def main() -> None:
-    LICENSE_NOTE.write_text(
-        "Vocabulary list derived from Complete HSK Vocabulary (MIT License)\n"
-        "https://github.com/drkameleon/complete-hsk-vocabulary\n"
-        "Vietnamese meanings curated/adapted for this product; English glosses from CC-CEDICT via upstream.\n",
-        encoding="utf-8",
-    )
+    try:
+        LICENSE_NOTE.write_text(
+            "Vocabulary list derived from Complete HSK Vocabulary (MIT License)\n"
+            "https://github.com/drkameleon/complete-hsk-vocabulary\n"
+            "Vietnamese meanings curated/adapted for this product; English glosses from CC-CEDICT via upstream.\n",
+            encoding="utf-8",
+        )
+    except OSError:
+        pass
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:

@@ -3,14 +3,51 @@
 from __future__ import annotations
 
 import os
-import runpy
+import traceback
 from pathlib import Path
 
 from fastapi import APIRouter, Header, HTTPException
 
-from app.core.database import Base, engine
+from app.core.database import Base, SessionLocal, engine
+from app.models import Scenario, Vocabulary
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _run_seed() -> dict:
+    """Import and run seed against current DB settings."""
+    import importlib.util
+
+    candidates = [
+        Path("/app/scripts/seed_db.py"),
+        Path(__file__).resolve().parents[4] / "scripts" / "seed_db.py",
+    ]
+    seed_path = next((p for p in candidates if p.exists()), None)
+    if not seed_path:
+        raise FileNotFoundError(f"seed_db.py not found in {[str(c) for c in candidates]}")
+
+    spec = importlib.util.spec_from_file_location("seed_db_mod", seed_path)
+    if not spec or not spec.loader:
+        raise RuntimeError("Cannot load seed_db module")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        # Skip writing license file on read-only containers
+        v = mod.seed_vocab(db)
+        s = mod.seed_scenarios(db)
+        total = db.query(Vocabulary).count()
+        scenarios = db.query(Scenario).count()
+        return {
+            "vocab_added": v,
+            "scenarios_added": s,
+            "vocab_total": total,
+            "scenarios_total": scenarios,
+        }
+    finally:
+        db.close()
 
 
 @router.post("/bootstrap")
@@ -19,15 +56,33 @@ def bootstrap(x_bootstrap_secret: str | None = Header(default=None)):
     if not expected or x_bootstrap_secret != expected:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+        result = _run_seed()
+        return {"ok": True, "message": "bootstrap complete", **result}
+    except Exception as exc:
+        # Return detail so Render logs / client can debug without SSH
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(exc),
+                "type": type(exc).__name__,
+                "trace": traceback.format_exc()[-2000:],
+            },
+        ) from exc
 
-    candidates = [
-        Path("/app/scripts/seed_db.py"),
-        Path(__file__).resolve().parents[4] / "scripts" / "seed_db.py",
-    ]
-    seed_path = next((p for p in candidates if p.exists()), None)
-    if not seed_path:
-        raise HTTPException(status_code=500, detail="seed_db.py not found")
 
-    runpy.run_path(str(seed_path), run_name="__main__")
-    return {"ok": True, "message": "bootstrap complete"}
+@router.get("/stats")
+def stats():
+    """Public-ish health for seed status (no secret)."""
+    try:
+        db = SessionLocal()
+        try:
+            return {
+                "vocab": db.query(Vocabulary).count(),
+                "scenarios": db.query(Scenario).count(),
+            }
+        finally:
+            db.close()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
