@@ -14,17 +14,25 @@ from app.models import Scenario, Vocabulary
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
+def _find_seed_path() -> Path:
+    here = Path(__file__).resolve()
+    candidates = [
+        Path("/app/scripts/seed_db.py"),
+        here.parents[2] / "scripts" / "seed_db.py",  # Docker: /app/app/routers -> /app/scripts
+    ]
+    if len(here.parents) >= 5:
+        candidates.append(here.parents[4] / "scripts" / "seed_db.py")  # local monorepo
+    for path in candidates:
+        if path.exists():
+            return path
+    raise FileNotFoundError(f"seed_db.py not found; tried: {[str(c) for c in candidates]}")
+
+
 def _run_seed() -> dict:
     """Import and run seed against current DB settings."""
     import importlib.util
 
-    candidates = [
-        Path("/app/scripts/seed_db.py"),
-        Path(__file__).resolve().parents[4] / "scripts" / "seed_db.py",
-    ]
-    seed_path = next((p for p in candidates if p.exists()), None)
-    if not seed_path:
-        raise FileNotFoundError(f"seed_db.py not found in {[str(c) for c in candidates]}")
+    seed_path = _find_seed_path()
 
     spec = importlib.util.spec_from_file_location("seed_db_mod", seed_path)
     if not spec or not spec.loader:
