@@ -1,0 +1,14 @@
+Vocabulary images — commercial-safe sources
+==========================================
+
+1) Google Noto Color Emoji (PNG via jsDelivr)
+   License: Apache License 2.0
+   https://github.com/googlefonts/noto-emoji
+   Free for commercial use. Include this NOTICE with distributions.
+
+2) Unsplash photographs (selected concrete nouns / workplace scenes)
+   License: Unsplash License — free to use commercially, no permission required
+   https://unsplash.com/license
+   Attribution appreciated but not required.
+
+Do NOT scrape Google Images / Baidu / random web photos for product assets.

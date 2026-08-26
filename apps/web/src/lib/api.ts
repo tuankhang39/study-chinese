@@ -21,6 +21,7 @@ export type Vocab = {
   part_of_speech?: string | null;
   example_zh?: string | null;
   example_vi?: string | null;
+  image_url?: string | null;
 };
 
 export type Card = {

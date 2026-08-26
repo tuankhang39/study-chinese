@@ -57,12 +57,29 @@ export default function VocabPage() {
             className="card-panel p-4 text-left transition hover:-translate-y-0.5"
             onClick={() => speakZh(v.hanzi)}
           >
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="font-zh text-3xl">{v.hanzi}</span>
-              <span className="text-xs text-[var(--muted)]">HSK {v.hsk_level}</span>
+            <div className="flex gap-3">
+              {v.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={v.image_url}
+                  alt={v.meaning_vi}
+                  className="h-16 w-16 shrink-0 rounded-lg object-cover bg-[var(--line)]"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[var(--line)] font-zh text-2xl">
+                  {v.hanzi.slice(0, 1)}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-zh text-3xl">{v.hanzi}</span>
+                  <span className="text-xs text-[var(--muted)]">HSK {v.hsk_level}</span>
+                </div>
+                <p className="mt-1 text-[var(--muted)]">{v.pinyin}</p>
+                <p className="mt-2">{v.meaning_vi}</p>
+              </div>
             </div>
-            <p className="mt-1 text-[var(--muted)]">{v.pinyin}</p>
-            <p className="mt-2">{v.meaning_vi}</p>
           </button>
         ))}
       </div>

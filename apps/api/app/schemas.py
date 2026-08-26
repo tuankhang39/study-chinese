@@ -45,6 +45,7 @@ class VocabOut(BaseModel):
     frequency: Optional[int] = None
     example_zh: Optional[str] = None
     example_vi: Optional[str] = None
+    image_url: Optional[str] = None
 
     class Config:
         from_attributes = True

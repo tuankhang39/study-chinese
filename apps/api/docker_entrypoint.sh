@@ -11,12 +11,21 @@ from app.models import Scenario, Vocabulary
 print("Creating tables...")
 Base.metadata.create_all(bind=engine)
 
+# Ensure columns added after initial deploy (create_all won't ALTER)
+from sqlalchemy import text
+
+with engine.begin() as conn:
+    conn.execute(text("ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS image_url VARCHAR(512)"))
+
 db = SessionLocal()
 try:
     count = db.query(Vocabulary).count()
     print(f"Vocab rows: {count}")
-    if count == 0:
-        print("Empty DB — auto-seeding...")
+    missing_images = (
+        db.query(Vocabulary).filter(Vocabulary.image_url.is_(None)).count() if count else 0
+    )
+    if count == 0 or missing_images > 50:
+        print("Seeding / backfilling vocab images...")
         try:
             from app.routers.admin import _run_seed
 

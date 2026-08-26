@@ -21,9 +21,14 @@ elif (ROOT / "app").exists():
 from app.core.database import Base, SessionLocal, engine  # noqa: E402
 from app.models import Scenario, Vocabulary  # noqa: E402
 
+# Image mapper lives next to this script (copied into Docker as /app/scripts)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from vocab_images import resolve_image_url  # noqa: E402
+
 HSK_FILE = ROOT / "data" / "hsk-complete.min.json"
 VI_FILE = ROOT / "data" / "vi_meanings.json"
 LICENSE_NOTE = ROOT / "data" / "HSK_DATASET_LICENSE.txt"
+IMAGE_LICENSE_NOTE = ROOT / "data" / "IMAGE_LICENSE.txt"
 
 # Lightweight EN gloss fragment -> VI for MVP (not a full translator)
 GLOSS_MAP = {
@@ -292,23 +297,35 @@ WORK_VOCAB = [
 ]
 
 
+def ensure_image_column() -> None:
+    """Add image_url if missing (Render create_all won't alter existing tables)."""
+    from sqlalchemy import text
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS image_url VARCHAR(512)"
+            )
+        )
+
+
 def seed_vocab(db) -> int:
     if not HSK_FILE.exists():
         raise SystemExit(f"Missing {HSK_FILE}. Download complete.min.json first.")
 
+    ensure_image_column()
     overrides = load_vi_overrides()
     raw = json.loads(HSK_FILE.read_text(encoding="utf-8"))
-    existing = {v.hanzi for v in db.query(Vocabulary.hanzi).all()} if False else set()
-    # reload properly
-    existing = {row[0] for row in db.query(Vocabulary.hanzi).all()}
+    existing = {row[0]: row[1] for row in db.query(Vocabulary.hanzi, Vocabulary.id).all()}
 
     added = 0
+    updated_images = 0
     for entry in raw:
         level = hsk_level_from_tags(entry.get("l") or [])
         if level is None:
             continue
         hanzi = entry.get("s")
-        if not hanzi or hanzi in existing:
+        if not hanzi:
             continue
         forms = entry.get("f") or [{}]
         form = forms[0] if forms else {}
@@ -316,6 +333,16 @@ def seed_vocab(db) -> int:
         meanings = form.get("m") or []
         meaning_en = "; ".join(meanings) if meanings else None
         meaning_vi = overrides.get(hanzi) or en_to_vi(meanings)
+        image_url = resolve_image_url(hanzi, meaning_en, meaning_vi)
+
+        if hanzi in existing:
+            if image_url:
+                row = db.get(Vocabulary, existing[hanzi])
+                if row and row.image_url != image_url:
+                    row.image_url = image_url
+                    updated_images += 1
+            continue
+
         db.add(
             Vocabulary(
                 hanzi=hanzi,
@@ -326,21 +353,34 @@ def seed_vocab(db) -> int:
                 hsk_level=level,
                 part_of_speech=",".join(entry.get("p") or []) or None,
                 frequency=entry.get("q"),
+                image_url=image_url,
             )
         )
-        existing.add(hanzi)
+        existing[hanzi] = -1  # mark present
         added += 1
         if added % 100 == 0:
             db.commit()
 
     for item in WORK_VOCAB:
+        image_url = resolve_image_url(
+            item["hanzi"], item.get("meaning_en"), item.get("meaning_vi")
+        )
+        payload = {**item, "image_url": image_url}
         if item["hanzi"] in existing:
+            if existing[item["hanzi"]] != -1 and image_url:
+                row = db.get(Vocabulary, existing[item["hanzi"]])
+                if row and not row.image_url:
+                    row.image_url = image_url
+                    updated_images += 1
             continue
-        db.add(Vocabulary(**item))
-        existing.add(item["hanzi"])
+        db.add(Vocabulary(**payload))
+        existing[item["hanzi"]] = -1
         added += 1
 
     db.commit()
+    # Return added; image backfill still happens for existing DBs
+    if updated_images and added == 0:
+        return updated_images
     return added
 
 
@@ -364,6 +404,11 @@ def main() -> None:
             "Vietnamese meanings curated/adapted for this product; English glosses from CC-CEDICT via upstream.\n",
             encoding="utf-8",
         )
+    except OSError:
+        pass
+    try:
+        if IMAGE_LICENSE_NOTE.exists():
+            pass  # keep curated license note in repo
     except OSError:
         pass
     Base.metadata.create_all(bind=engine)

@@ -56,6 +56,7 @@ class Vocabulary(Base):
     frequency: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     example_zh: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     example_vi: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    image_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
     cards: Mapped[list[UserCard]] = relationship(back_populates="vocab")
 
