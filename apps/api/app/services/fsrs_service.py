@@ -77,6 +77,37 @@ def ensure_cards_for_user(db: Session, user_id: int, limit: int = 50, hsk_max: i
     return created
 
 
+def ensure_cards_for_vocab_ids(db: Session, user_id: int, vocab_ids: list[int]) -> int:
+    """Create FSRS cards for specific vocab (e.g. after finishing a lesson)."""
+    if not vocab_ids:
+        return 0
+    existing = {
+        row[0]
+        for row in db.query(UserCard.vocab_id)
+        .filter(UserCard.user_id == user_id, UserCard.vocab_id.in_(vocab_ids))
+        .all()
+    }
+    now = datetime.now(timezone.utc)
+    created = 0
+    for vid in vocab_ids:
+        if vid in existing:
+            continue
+        db.add(
+            UserCard(
+                user_id=user_id,
+                vocab_id=vid,
+                due=now,
+                stability=0.0,
+                difficulty=0.0,
+                state=int(State.Learning),
+            )
+        )
+        created += 1
+    if created:
+        db.commit()
+    return created
+
+
 def review_card(db: Session, model: UserCard, rating_key: str) -> UserCard:
     rating = RATING_MAP[rating_key]
     scheduler = _scheduler()

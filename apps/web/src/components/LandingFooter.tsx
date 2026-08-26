@@ -19,22 +19,22 @@ export function LandingFooter() {
           <p className="text-sm font-bold uppercase tracking-wide text-[var(--orange)]">Khóa học</p>
           <ul className="mt-4 space-y-2.5 text-sm text-white/70">
             <li>
-              <a href="#modules" className="hover:text-white">
+              <a href="/learn" className="hover:text-white">
                 Giáo trình HSK
               </a>
             </li>
             <li>
-              <a href="#modules" className="hover:text-white">
+              <a href="/vocab" className="hover:text-white">
                 Từ vựng chủ đề
               </a>
             </li>
             <li>
-              <a href="#modules" className="hover:text-white">
+              <a href="/work" className="hover:text-white">
                 Hội thoại đi làm
               </a>
             </li>
             <li>
-              <a href="#modules" className="hover:text-white">
+              <a href="/learn" className="hover:text-white">
                 Luyện thi HSK
               </a>
             </li>

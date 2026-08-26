@@ -25,8 +25,16 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       BOOTSTRAP_SECRET: ${BOOTSTRAP_SECRET:-local-bootstrap}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@example.com}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD:-admin123456}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://127.0.0.1:8001/api/auth/google/callback}
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost:3001}
     ports:
       - "8001:8000"
+    volumes:
+      - ./data/curriculum:/app/data/curriculum
     depends_on:
       db:
         condition: service_healthy

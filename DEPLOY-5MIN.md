@@ -27,6 +27,8 @@ git push -u origin main
 3. Điền env khi hỏi:
    - `CORS_ORIGINS` = tạm `*` hoặc để sau
    - `OPENAI_API_KEY` = để trống nếu chưa có
+   - `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` = tài khoản Super Admin (tạo lúc boot)
+   - Google (tuỳ chọn): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI=https://YOUR-API.onrender.com/api/auth/google/callback`, `WEB_APP_URL=https://xxx.vercel.app`
 4. Deploy → copy URL API, vd `https://hoctiengtrung-api.onrender.com`
 
 5. Seed dữ liệu (1 lần):
@@ -35,6 +37,8 @@ git push -u origin main
 curl -X POST https://YOUR-API.onrender.com/api/admin/bootstrap \
   -H "X-Bootstrap-Secret: GIÁ_TRỊ_BOOTSTRAP_SECRET_TRONG_RENDER"
 ```
+
+Admin UI: `https://xxx.vercel.app/admin` (đăng nhập Super Admin).
 
 (Lấy `BOOTSTRAP_SECRET` trong Render → Environment)
 

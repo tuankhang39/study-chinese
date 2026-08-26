@@ -1,0 +1,7 @@
+{
+  "git.autoRepositoryDetection": true,
+  "git.repositoryScanMaxDepth": 0,
+  "git.ignoredRepositories": [
+    "**/apps/web"
+  ]
+}

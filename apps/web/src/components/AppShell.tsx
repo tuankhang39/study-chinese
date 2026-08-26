@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { api, User } from "@/lib/api";
+import { api, isAdminRole, User } from "@/lib/api";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -11,16 +11,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
+  const isAdminPath = pathname.startsWith("/admin");
+  const publicPaths = ["/", "/login", "/register"];
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const publicPaths = ["/", "/login", "/register"];
     if (!token && !publicPaths.includes(pathname)) {
       router.replace("/login");
       return;
     }
     if (token && (pathname === "/login" || pathname === "/register")) {
-      router.replace("/home");
-      return;
+      // login page may still process ?token= from Google
+      if (!pathname.startsWith("/login")) {
+        router.replace("/home");
+        return;
+      }
     }
     if (token && !publicPaths.includes(pathname)) {
       api
@@ -31,14 +36,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, [pathname, router]);
 
-  const isApp = !["/", "/login", "/register"].includes(pathname);
+  const isApp = !publicPaths.includes(pathname) && !isAdminPath;
 
   function logout() {
     localStorage.removeItem("token");
     router.push("/login");
   }
 
-  if (!ready && isApp) {
+  if (!ready && (isApp || isAdminPath)) {
     return (
       <div className="grid min-h-screen place-items-center bg-white text-[var(--muted)]">
         Đang tải…
@@ -53,6 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           variant="app"
           activePath={pathname}
           userName={user?.display_name}
+          showAdmin={isAdminRole(user?.role)}
           onLogout={logout}
         />
       )}

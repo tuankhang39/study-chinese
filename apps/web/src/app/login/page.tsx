@@ -1,16 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const search = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleOn, setGoogleOn] = useState(false);
+
+  useEffect(() => {
+    const token = search.get("token");
+    const gErr = search.get("error");
+    if (token) {
+      localStorage.setItem("token", token);
+      router.replace("/home");
+      return;
+    }
+    if (gErr) setError(`Google login lỗi: ${gErr}`);
+    api.googleStatus().then((s) => setGoogleOn(s.enabled)).catch(() => setGoogleOn(false));
+  }, [search, router]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,7 +33,8 @@ export default function LoginPage() {
     try {
       const res = await api.login({ email, password });
       localStorage.setItem("token", res.access_token);
-      router.push("/home");
+      const me = await api.me();
+      router.push(me.role === "admin" || me.role === "super_admin" ? "/admin" : "/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {
@@ -30,14 +45,20 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden bg-[var(--navy)] lg:flex lg:flex-col lg:justify-center lg:px-12">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: "url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }} />
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=800&q=80')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
         <div className="relative z-10">
           <p className="font-display text-4xl font-bold uppercase leading-tight text-white">
-            Tiếng Trung<br />đi làm
+            Tiếng Trung
+            <br />
+            đi làm
           </p>
           <p className="mt-4 max-w-sm text-white/75">
             Tiếp tục streak, hoàn thành nhiệm vụ hôm nay và luyện nói với AI sếp Trung Quốc.
@@ -70,6 +91,15 @@ export default function LoginPage() {
             {loading ? "Đang vào…" : "Đăng nhập"}
           </button>
         </form>
+        {googleOn ? (
+          <a href={api.googleStartUrl()} className="btn btn-ghost mt-3 w-full text-center">
+            Đăng nhập Google
+          </a>
+        ) : (
+          <p className="mt-3 text-center text-xs text-[var(--muted)]">
+            Google login: cấu hình GOOGLE_CLIENT_ID / SECRET trên API để bật.
+          </p>
+        )}
         <p className="mt-6 text-sm text-[var(--muted)]">
           Chưa có tài khoản?{" "}
           <Link href="/register" className="font-semibold text-[var(--orange)] hover:underline">
@@ -78,5 +108,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="p-8 text-[var(--muted)]">Đang tải…</p>}>
+      <LoginForm />
+    </Suspense>
   );
 }

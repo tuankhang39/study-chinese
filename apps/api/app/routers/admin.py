@@ -89,9 +89,6 @@ def stats():
             return {
                 "vocab": db.query(Vocabulary).count(),
                 "scenarios": db.query(Scenario).count(),
-                "with_images": db.query(Vocabulary)
-                .filter(Vocabulary.image_url.isnot(None))
-                .count(),
             }
         finally:
             db.close()

@@ -12,3 +12,10 @@ apps/api/.env
 .tunnel-urls
 apps/api/.venv/
 *.log
+
+# Local bulk assets — transfer separately, do not push
+data/
+document/
+backups/
+*.dump
+*.sql.gz

@@ -11,6 +11,7 @@ const modules = [
     count: "600+ từ",
     icon: "HSK",
     accent: "navy",
+    href: "/learn",
   },
   {
     title: "Từ vựng chủ đề",
@@ -18,6 +19,7 @@ const modules = [
     count: "8 chủ đề",
     icon: "词",
     accent: "orange",
+    href: "/vocab",
   },
   {
     title: "Hội thoại đi làm",
@@ -25,6 +27,7 @@ const modules = [
     count: "5 tình huống",
     icon: "话",
     accent: "navy",
+    href: "/work",
   },
   {
     title: "Flashcard FSRS",
@@ -32,6 +35,7 @@ const modules = [
     count: "Ôn hàng ngày",
     icon: "卡",
     accent: "orange",
+    href: "/flashcards",
   },
   {
     title: "Listening",
@@ -39,6 +43,7 @@ const modules = [
     count: "Không giới hạn",
     icon: "听",
     accent: "navy",
+    href: "/listening",
   },
   {
     title: "AI Roleplay",
@@ -46,6 +51,7 @@ const modules = [
     count: "Demo + API",
     icon: "AI",
     accent: "orange",
+    href: "/work",
   },
   {
     title: "Luyện thi HSK",
@@ -53,6 +59,7 @@ const modules = [
     count: "HSK 1–3",
     icon: "试",
     accent: "navy",
+    href: "/learn",
   },
   {
     title: "XP & Streak",
@@ -60,6 +67,7 @@ const modules = [
     count: "4 nhiệm vụ/ngày",
     icon: "火",
     accent: "orange",
+    href: "/home",
   },
 ];
 
@@ -190,7 +198,7 @@ export default function LandingPage() {
             {modules.map((m) => (
               <Link
                 key={m.title}
-                href="/register"
+                href={m.href}
                 className="feature-card group flex flex-col overflow-hidden rounded-sm border border-[var(--line)] bg-white shadow-sm transition hover:-translate-y-1 hover:border-[var(--orange)] hover:shadow-lg"
               >
                 <div

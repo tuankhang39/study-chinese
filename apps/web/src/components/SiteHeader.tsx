@@ -4,30 +4,41 @@ export type NavItem = { href: string; label: string };
 
 export const siteNavItems: NavItem[] = [
   { href: "/home", label: "Trang chủ" },
-  { href: "/vocab", label: "HSK" },
+  { href: "/learn", label: "Khóa HSK" },
   { href: "/vocab", label: "Từ vựng" },
   { href: "/work", label: "Hội thoại" },
   { href: "/listening", label: "Nghe" },
   { href: "/flashcards", label: "Flashcard" },
   { href: "/work", label: "Đi làm" },
-  { href: "/flashcards", label: "Luyện thi" },
 ];
 
 type SiteHeaderProps = {
   variant: "public" | "app";
   activePath?: string;
   userName?: string;
+  showAdmin?: boolean;
   onLogout?: () => void;
 };
 
-export function SiteHeader({ variant, activePath = "", userName, onLogout }: SiteHeaderProps) {
+export function SiteHeader({
+  variant,
+  activePath = "",
+  userName,
+  showAdmin,
+  onLogout,
+}: SiteHeaderProps) {
   const logoHref = variant === "app" ? "/home" : "/";
   const navItems =
     variant === "public"
-      ? siteNavItems.map((item) =>
-          item.label === "Trang chủ" ? { ...item, href: "/" } : { ...item, href: `#modules` }
-        )
-      : siteNavItems;
+      ? siteNavItems.map((item) => {
+          if (item.label === "Trang chủ") return { ...item, href: "/" };
+          if (item.label === "Khóa HSK") return { ...item, href: "/learn" };
+          return { ...item, href: item.href };
+        })
+      : [
+          ...siteNavItems,
+          ...(showAdmin ? [{ href: "/admin", label: "Admin" }] : []),
+        ];
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-md">

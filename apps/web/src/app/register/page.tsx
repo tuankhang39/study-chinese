@@ -79,6 +79,9 @@ export default function RegisterPage() {
             {loading ? "Đang tạo…" : "Đăng ký"}
           </button>
         </form>
+        <a href={api.googleStartUrl()} className="btn btn-ghost mt-3 w-full text-center">
+          Đăng ký / vào bằng Google
+        </a>
         <p className="mt-6 text-sm text-[var(--muted)]">
           Đã có tài khoản?{" "}
           <Link href="/login" className="font-semibold text-[var(--orange)] hover:underline">

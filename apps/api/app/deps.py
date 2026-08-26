@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -10,6 +10,10 @@ from app.core.security import decode_access_token
 from app.models import User
 
 security = HTTPBearer(auto_error=False)
+
+RoleName = Literal["user", "admin", "super_admin"]
+PlanName = Literal["free", "pro", "unlimit"]
+ADMIN_ROLES = frozenset({"admin", "super_admin"})
 
 
 def get_current_user(
@@ -26,6 +30,18 @@ def get_current_user(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
+
+
+def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if (user.role or "user") not in ADMIN_ROLES:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
+    return user
+
+
+def require_super_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    if (user.role or "user") != "super_admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super Admin only")
     return user
 
 
@@ -54,4 +70,6 @@ def touch_streak(user: User, today: date | None = None) -> None:
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+AdminUser = Annotated[User, Depends(require_admin)]
+SuperAdminUser = Annotated[User, Depends(require_super_admin)]
 DbSession = Annotated[Session, Depends(get_db)]

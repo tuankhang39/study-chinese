@@ -3,7 +3,8 @@ import random
 from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy.orm import joinedload
 
-from app.core.config import settings
+from app.core.config import ai_limit_for_plan
+
 from app.deps import CurrentUser, DbSession, award_xp, touch_streak
 from app.models import RoleplaySession, Scenario, Vocabulary
 from app.schemas import (
@@ -83,7 +84,8 @@ async def send_message(
     if user.ai_messages_date != today:
         user.ai_messages_date = today
         user.ai_messages_today = 0
-    if user.ai_messages_today >= settings.daily_ai_message_limit:
+    limit = ai_limit_for_plan(getattr(user, "plan", None) or "free")
+    if limit is not None and user.ai_messages_today >= limit:
         raise HTTPException(status_code=429, detail="Daily AI message limit reached")
 
     history = []

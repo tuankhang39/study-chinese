@@ -8,6 +8,14 @@ const floatingChars = "学读写听说工作";
 
 const quickModules = [
   {
+    href: "/learn",
+    title: "Khóa HSK",
+    desc: "HSK 1–6 · từ → câu → hội thoại · nghe phát âm.",
+    count: "Catalog",
+    icon: "课",
+    accent: "orange" as const,
+  },
+  {
     href: "/flashcards",
     title: "Flashcard FSRS",
     desc: "Ôn thẻ đến hạn — nhớ lâu, quên chậm.",

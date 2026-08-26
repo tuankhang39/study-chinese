@@ -77,28 +77,12 @@ export default function FlashcardsPage() {
       >
         {!flipped ? (
           <>
-            {card.vocab.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={card.vocab.image_url}
-                alt=""
-                className="mx-auto mb-6 h-36 w-36 rounded-2xl object-cover bg-[var(--line)]"
-              />
-            )}
             <p className="font-zh text-6xl font-medium tracking-wide">{card.vocab.hanzi}</p>
             <p className="mt-4 text-xl text-[var(--muted)]">{card.vocab.pinyin}</p>
             <p className="mt-8 text-sm text-[var(--muted)]">Chạm để xem nghĩa</p>
           </>
         ) : (
           <>
-            {card.vocab.image_url && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={card.vocab.image_url}
-                alt={card.vocab.meaning_vi}
-                className="mx-auto mb-6 h-36 w-36 rounded-2xl object-cover bg-[var(--line)]"
-              />
-            )}
             <p className="text-2xl font-medium">{card.vocab.meaning_vi}</p>
             {card.vocab.example_zh && (
               <div className="mt-6 text-left">
