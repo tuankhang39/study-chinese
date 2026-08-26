@@ -62,6 +62,7 @@ export default function AdminCourseLessonsPage() {
     Promise.all([loadCourse(), loadLessons(1)]).catch((e) =>
       setError(e instanceof Error ? e.message : "Lỗi tải")
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   async function onCreate(e: FormEvent) {

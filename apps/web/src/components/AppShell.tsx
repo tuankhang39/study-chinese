@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { api, isAdminRole, User } from "@/lib/api";
 
+const PUBLIC_PATHS = ["/", "/login", "/register"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -12,11 +14,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const isAdminPath = pathname.startsWith("/admin");
-  const publicPaths = ["/", "/login", "/register"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token && !publicPaths.includes(pathname)) {
+    if (!token && !PUBLIC_PATHS.includes(pathname)) {
       router.replace("/login");
       return;
     }
@@ -27,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return;
       }
     }
-    if (token && !publicPaths.includes(pathname)) {
+    if (token && !PUBLIC_PATHS.includes(pathname)) {
       api
         .me()
         .then(setUser)
@@ -36,7 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setReady(true);
   }, [pathname, router]);
 
-  const isApp = !publicPaths.includes(pathname) && !isAdminPath;
+  const isApp = !PUBLIC_PATHS.includes(pathname) && !isAdminPath;
 
   function logout() {
     localStorage.removeItem("token");

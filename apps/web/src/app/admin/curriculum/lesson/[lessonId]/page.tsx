@@ -96,6 +96,7 @@ export default function AdminLessonEditorPage() {
   useEffect(() => {
     if (!lessonId) return;
     load().catch((e) => setError(e instanceof Error ? e.message : "Lỗi tải"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
 
   const steps = useMemo(
