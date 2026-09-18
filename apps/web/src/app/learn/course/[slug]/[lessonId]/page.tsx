@@ -2,6 +2,6 @@
 
 import LessonPlayerClient from "@/components/learn/LessonPlayerClient";
 
-export default function HskLessonPlayerPage() {
+export default function CourseLessonPlayerPage() {
   return <LessonPlayerClient />;
 }

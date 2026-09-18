@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { api, isAdminRole, User } from "@/lib/api";
 
 const NAV = [
@@ -70,14 +71,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        <div className="flex shrink-0 items-center gap-2.5 border-b border-white/10 px-5 py-4">
-          <span className="flex h-9 w-9 items-center justify-center rounded-sm bg-[var(--orange)] font-zh text-lg font-bold">
-            中
-          </span>
-          <div className="leading-tight">
-            <p className="font-display text-sm font-bold uppercase tracking-wide">Admin</p>
-            <p className="text-[10px] uppercase tracking-widest text-white/55">Tiếng Trung đi làm</p>
-          </div>
+        <div className="flex shrink-0 flex-col gap-1 border-b border-white/10 px-4 py-4">
+          <BrandLogo href="/admin" size="sm" className="brightness-0 invert" />
+          <p className="px-0.5 text-[10px] font-bold uppercase tracking-widest text-white/55">Admin</p>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">
           {NAV.map((item) => {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { api } from "@/lib/api";
 
 function LoginForm() {
@@ -55,11 +56,7 @@ function LoginForm() {
           }}
         />
         <div className="relative z-10">
-          <p className="font-display text-4xl font-bold uppercase leading-tight text-white">
-            Tiếng Trung
-            <br />
-            đi làm
-          </p>
+          <BrandLogo href={null} size="lg" className="brightness-0 invert" priority />
           <p className="mt-4 max-w-sm text-white/75">
             Tiếp tục streak, hoàn thành nhiệm vụ hôm nay và luyện nói với AI sếp Trung Quốc.
           </p>

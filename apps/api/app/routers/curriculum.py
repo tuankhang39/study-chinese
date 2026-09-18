@@ -790,7 +790,23 @@ def _map_vocab_links(db: DbSession, lesson_id: int, vocab_items: list[dict]) -> 
 
 
 def _seed_hsk_shells(db: DbSession) -> None:
-    """Ensure HSK2–6 coming-soon course shells exist (HSK1 comes from full seed)."""
+    """Ensure pre-HSK pinyin + HSK2–6 coming-soon shells exist (HSK1 from full seed)."""
+    if not db.query(Course).filter(Course.slug == "pinyin").first():
+        db.add(
+            Course(
+                slug="pinyin",
+                title="Phát âm nền",
+                title_en="Pinyin Foundations",
+                description=(
+                    "Học trước HSK 1 — thanh mẫu, vận mẫu, thanh điệu: mẹo lưỡi, khuôn miệng, "
+                    "bật hơi, và luyện ghép âm."
+                ),
+                hsk_level=0,
+                published=True,
+                coming_soon=False,
+                sort_order=0,
+            )
+        )
     for level in range(2, 7):
         slug = f"hsk{level}"
         if db.query(Course).filter(Course.slug == slug).first():

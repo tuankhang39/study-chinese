@@ -6,6 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Tiếng Trung đi làm",
   description: "Học tiếng Trung theo hướng nghề nghiệp và từ vựng HSK cho người Việt",
+  icons: {
+    icon: [{ url: "/app_icon.png", type: "image/png" }],
+    apple: [{ url: "/app_icon.png", type: "image/png" }],
+    shortcut: "/app_icon.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

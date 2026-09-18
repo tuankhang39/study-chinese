@@ -197,12 +197,15 @@ def admin_list_vocab(
     db: DbSession,
     q: str | None = None,
     hsk_level: int | None = None,
+    topic: str | None = None,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ) -> PaginatedVocab:
     query = db.query(Vocabulary)
     if hsk_level is not None:
         query = query.filter(Vocabulary.hsk_level == hsk_level)
+    if topic:
+        query = query.filter(Vocabulary.topic == topic)
     if q:
         like = f"%{q.strip()}%"
         query = query.filter(

@@ -18,13 +18,15 @@ const ITEM_TYPES = [
 
 const STEP_KEYS = [
   "objectives",
+  "phonics",
+  "tongue_twister",
+  "warmup",
   "vocab",
   "sentences",
   "dialogue",
   "grammar",
   "practice",
   "review",
-  "tongue_twister",
   "complete",
 ];
 

@@ -14,13 +14,41 @@ const blank = {
   traditional: "",
   example_zh: "",
   example_vi: "",
+  topic: "",
 };
+
+const TOPIC_OPTIONS: { id: string; label: string }[] = [
+  { id: "greeting", label: "Chào hỏi & Giao tiếp" },
+  { id: "pronoun", label: "Đại từ & Từ hỏi" },
+  { id: "number", label: "Số & Lượng từ" },
+  { id: "time", label: "Thời gian" },
+  { id: "family", label: "Gia đình & Con người" },
+  { id: "body", label: "Cơ thể & Sức khỏe" },
+  { id: "food", label: "Ăn uống" },
+  { id: "house", label: "Nhà cửa & Đồ vật" },
+  { id: "place", label: "Nơi chốn & Giao thông" },
+  { id: "direction", label: "Phương hướng & Vị trí" },
+  { id: "nature", label: "Thời tiết & Tự nhiên" },
+  { id: "emotion", label: "Cảm xúc" },
+  { id: "adjective", label: "Tính từ mô tả" },
+  { id: "entertainment", label: "Giải trí & Thể thao" },
+  { id: "school", label: "Trường học & Học tập" },
+  { id: "work", label: "Công việc & Đi làm" },
+  { id: "verb", label: "Động từ thông dụng" },
+  { id: "grammar", label: "Ngữ pháp & Từ nối" },
+  { id: "other", label: "Khác" },
+];
+
+function topicLabel(id?: string | null): string {
+  return TOPIC_OPTIONS.find((t) => t.id === id)?.label || id || "—";
+}
 
 export default function AdminVocabPage() {
   const [items, setItems] = useState<Vocab[]>([]);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
   const [hsk, setHsk] = useState<number | "">("");
+  const [topic, setTopic] = useState<string>("");
   const [page, setPage] = useState(1);
   const [form, setForm] = useState(blank);
   const [createOpen, setCreateOpen] = useState(false);
@@ -31,6 +59,7 @@ export default function AdminVocabPage() {
     const res = await api.admin.vocab({
       q: q || undefined,
       hsk_level: hsk === "" ? undefined : hsk,
+      topic: topic || undefined,
       page: p,
       page_size: ADMIN_PAGE_SIZE,
     });
@@ -56,6 +85,7 @@ export default function AdminVocabPage() {
         traditional: form.traditional || undefined,
         example_zh: form.example_zh || undefined,
         example_vi: form.example_vi || undefined,
+        topic: form.topic || undefined,
       });
       setForm(blank);
       setCreateOpen(false);
@@ -78,6 +108,7 @@ export default function AdminVocabPage() {
         traditional: editing.traditional,
         example_zh: editing.example_zh,
         example_vi: editing.example_vi,
+        topic: editing.topic,
       });
       setEditing(null);
       await load(page);
@@ -108,6 +139,14 @@ export default function AdminVocabPage() {
             </option>
           ))}
         </select>
+        <select className="input max-w-[12rem]" value={topic} onChange={(e) => setTopic(e.target.value)}>
+          <option value="">Chủ đề (tất cả)</option>
+          {TOPIC_OPTIONS.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.label}
+            </option>
+          ))}
+        </select>
         <button className="btn btn-navy text-xs" type="button" onClick={() => load(1).catch((e) => setError(e.message))}>
           Tìm
         </button>
@@ -122,6 +161,7 @@ export default function AdminVocabPage() {
               <th className="p-3 font-semibold uppercase tracking-wide text-[var(--muted)]">Pinyin</th>
               <th className="p-3 font-semibold uppercase tracking-wide text-[var(--muted)]">Nghĩa</th>
               <th className="p-3 font-semibold uppercase tracking-wide text-[var(--muted)]">HSK</th>
+              <th className="p-3 font-semibold uppercase tracking-wide text-[var(--muted)]">Chủ đề</th>
               <th className="p-3" />
             </tr>
           </thead>
@@ -132,6 +172,7 @@ export default function AdminVocabPage() {
                 <td className="p-3">{v.pinyin}</td>
                 <td className="p-3">{v.meaning_vi}</td>
                 <td className="p-3">{v.hsk_level}</td>
+                <td className="p-3 text-xs">{topicLabel(v.topic)}</td>
                 <td className="space-x-2 p-3 text-right">
                   <button type="button" className="font-semibold text-[var(--orange)]" onClick={() => setEditing({ ...v })}>
                     Sửa
@@ -160,6 +201,14 @@ export default function AdminVocabPage() {
           <input className="input" placeholder="Hanzi" required value={form.hanzi} onChange={(e) => setForm({ ...form, hanzi: e.target.value })} />
           <input className="input" placeholder="Pinyin" required value={form.pinyin} onChange={(e) => setForm({ ...form, pinyin: e.target.value })} />
           <input className="input" type="number" min={1} max={6} value={form.hsk_level} onChange={(e) => setForm({ ...form, hsk_level: Number(e.target.value) })} />
+          <select className="input" value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })}>
+            <option value="">Chủ đề…</option>
+            {TOPIC_OPTIONS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
           <input className="input md:col-span-2" placeholder="Nghĩa VI" required value={form.meaning_vi} onChange={(e) => setForm({ ...form, meaning_vi: e.target.value })} />
           <input className="input" placeholder="Nghĩa EN" value={form.meaning_en} onChange={(e) => setForm({ ...form, meaning_en: e.target.value })} />
           <div className="md:col-span-3 mt-2 flex justify-end gap-2">
@@ -180,6 +229,14 @@ export default function AdminVocabPage() {
             <input className="input" value={editing.pinyin} onChange={(e) => setEditing({ ...editing, pinyin: e.target.value })} />
             <input className="input" value={editing.meaning_vi} onChange={(e) => setEditing({ ...editing, meaning_vi: e.target.value })} />
             <input className="input" type="number" value={editing.hsk_level} onChange={(e) => setEditing({ ...editing, hsk_level: Number(e.target.value) })} />
+            <select className="input" value={editing.topic || ""} onChange={(e) => setEditing({ ...editing, topic: e.target.value })}>
+              <option value="">Chủ đề…</option>
+              {TOPIC_OPTIONS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
             <div className="mt-2 flex justify-end gap-2">
               <button className="btn btn-ghost" type="button" onClick={() => setEditing(null)}>
                 Hủy

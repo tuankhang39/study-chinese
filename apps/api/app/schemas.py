@@ -61,6 +61,7 @@ class AdminVocabCreate(BaseModel):
     frequency: Optional[int] = None
     example_zh: Optional[str] = None
     example_vi: Optional[str] = None
+    topic: Optional[str] = None
 
 
 class AdminVocabUpdate(BaseModel):
@@ -74,6 +75,7 @@ class AdminVocabUpdate(BaseModel):
     frequency: Optional[int] = None
     example_zh: Optional[str] = None
     example_vi: Optional[str] = None
+    topic: Optional[str] = None
 
 
 class AdminScenarioCreate(BaseModel):
@@ -123,9 +125,15 @@ class VocabOut(BaseModel):
     example_zh: Optional[str] = None
     example_vi: Optional[str] = None
     image_url: Optional[str] = None
+    topic: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class VocabTopicOut(BaseModel):
+    topic: str
+    count: int
 
 
 class PaginatedUsers(BaseModel):
@@ -284,7 +292,7 @@ class CourseCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     title_en: Optional[str] = None
     description: str = ""
-    hsk_level: int = Field(default=1, ge=1, le=6)
+    hsk_level: int = Field(default=1, ge=0, le=6)  # 0 = pre-HSK (e.g. pinyin)
     cover_image_url: Optional[str] = None
     published: bool = True
     coming_soon: bool = False
@@ -296,7 +304,7 @@ class CourseUpdate(BaseModel):
     title: Optional[str] = Field(default=None, min_length=1, max_length=200)
     title_en: Optional[str] = None
     description: Optional[str] = None
-    hsk_level: Optional[int] = Field(default=None, ge=1, le=6)
+    hsk_level: Optional[int] = Field(default=None, ge=0, le=6)
     cover_image_url: Optional[str] = None
     published: Optional[bool] = None
     coming_soon: Optional[bool] = None

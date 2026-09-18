@@ -60,6 +60,7 @@ class Vocabulary(Base):
     example_zh: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     example_vi: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     image_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    topic: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
 
     cards: Mapped[list[UserCard]] = relationship(back_populates="vocab")
 

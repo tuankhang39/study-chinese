@@ -43,6 +43,8 @@ LESSON_TYPE_PIPELINES: dict[str, list[str]] = {
         "phonics",
         "vocab",
         "sentences",
+        "practice",
+        "review",
         "complete",
     ],
     "grammar_focus": [
@@ -79,7 +81,7 @@ LESSON_TYPE_PIPELINES: dict[str, list[str]] = {
 
 LESSON_TYPES = set(LESSON_TYPE_PIPELINES.keys())
 
-# HSK1 lesson number → lesson_type
+# HSK1 lesson number → lesson_type (phonics lives in separate pre-HSK course)
 HSK1_LESSON_TYPES: dict[int, str] = {
     1: "survival_phrases",
     2: "dialogue_core",
@@ -100,7 +102,6 @@ HSK1_LESSON_TYPES: dict[int, str] = {
 
 # Extra steps inserted for L2–3 (tongue twister after objectives)
 HSK1_EXTRA_STEPS: dict[int, list[tuple[int, str]]] = {
-    # insert_at_index, step_key
     2: [(1, "tongue_twister")],
     3: [(1, "tongue_twister")],
 }

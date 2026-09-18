@@ -140,7 +140,7 @@ export default function AdminCourseLessonsPage() {
             ← Giáo trình
           </Link>
           <h1 className="font-display mt-1 text-3xl font-bold uppercase text-[var(--navy)]">
-            HSK {course?.hsk_level ?? "—"} · {course?.title}
+            HSK {course?.hsk_level === 0 ? "nền" : (course?.hsk_level ?? "—")} · {course?.title}
           </h1>
           <p className="text-sm text-[var(--muted)]">
             {total} bài · slug <code className="text-xs">{course?.slug}</code>
@@ -200,7 +200,11 @@ export default function AdminCourseLessonsPage() {
                     </Link>
                     <Link
                       className="btn btn-ghost px-2 py-1 text-xs"
-                      href={`/learn/hsk/${course?.hsk_level ?? 1}/${L.id}`}
+                      href={
+                        course?.slug?.startsWith("hsk")
+                          ? `/learn/hsk/${course?.hsk_level ?? 1}/${L.id}`
+                          : `/learn/course/${course?.slug}/${L.id}`
+                      }
                       target="_blank"
                     >
                       Preview

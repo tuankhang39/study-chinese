@@ -125,7 +125,7 @@ export default function AdminCurriculumCoursesPage() {
             <Link href={`/admin/curriculum/course/${c.id}`} className="block">
               <div className="flex h-28 items-center justify-center bg-gradient-to-br from-[var(--navy)] to-[#003399]">
                 <span className="font-display text-4xl font-bold tracking-wide text-white">
-                  HSK {c.hsk_level}
+                  {c.hsk_level === 0 || c.slug === "pinyin" ? "拼音" : `HSK ${c.hsk_level}`}
                 </span>
               </div>
               <div className="space-y-2 p-4">
@@ -266,7 +266,7 @@ function CourseFields({
           <input
             className="input mt-1"
             type="number"
-            min={1}
+            min={0}
             max={6}
             required
             value={value.hsk_level}

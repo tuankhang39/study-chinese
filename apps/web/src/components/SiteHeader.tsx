@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export type NavItem = { href: string; label: string };
 
@@ -44,7 +45,7 @@ export function SiteHeader({
     <header className="sticky top-0 z-40 bg-white shadow-md">
       <div className="hidden border-b border-white/10 bg-[var(--navy)] text-white sm:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs">
-          <span>Tiếng Trung đi làm · HSK + Career Chinese</span>
+          <span>HSK + Career Chinese</span>
           <div className="flex items-center gap-5">
             {variant === "app" ? (
               <>
@@ -74,19 +75,7 @@ export function SiteHeader({
 
       <div className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
-          <Link href={logoHref} className="flex shrink-0 items-center gap-2.5">
-            <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-[var(--orange)] font-zh text-xl font-bold text-white shadow-md">
-              中
-            </span>
-            <div className="leading-tight">
-              <span className="font-display block text-lg font-bold uppercase tracking-wide text-[var(--navy)]">
-                Tiếng Trung
-              </span>
-              <span className="block text-xs font-semibold uppercase tracking-widest text-[var(--orange)]">
-                Đi làm
-              </span>
-            </div>
-          </Link>
+          <BrandLogo href={logoHref} size="md" priority />
 
           <nav className="hidden flex-1 items-center gap-1 overflow-x-auto lg:flex">
             {navItems.map((item, i) => {

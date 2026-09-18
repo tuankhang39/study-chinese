@@ -4,6 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, Course } from "@/lib/api";
 
+function courseHref(c: Course) {
+  if (c.slug.startsWith("hsk") && c.hsk_level >= 1) return `/learn/hsk/${c.hsk_level}`;
+  return `/learn/course/${c.slug}`;
+}
+
+function courseBadge(c: Course) {
+  if (c.slug === "pinyin" || c.hsk_level === 0) return "拼音";
+  return `HSK ${c.hsk_level}`;
+}
+
 export default function LearnHubPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [error, setError] = useState("");
@@ -19,6 +29,9 @@ export default function LearnHubPage() {
       .then(setCourses)
       .catch((e) => setError(e.message));
   }, []);
+
+  const pinyin = courses.find((c) => c.slug === "pinyin");
+  const startHref = pinyin ? courseHref(pinyin) : "/learn/hsk/1";
 
   return (
     <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden">
@@ -36,14 +49,14 @@ export default function LearnHubPage() {
               ← Trang chủ
             </Link>
             <h1 className="font-display mt-2 text-4xl font-bold uppercase tracking-tight text-[var(--navy)] md:text-5xl">
-              Khóa HSK
+              Khóa học
             </h1>
             <p className="mt-2 max-w-xl text-[var(--muted)]">
-              Chọn cấp độ · học theo bước (từ → câu → hội thoại → luyện) · nghe phát âm từng card
+              Bắt đầu với phát âm nền, rồi vào HSK theo cấp · học theo bước · nghe từng card
             </p>
           </div>
-          <Link href="/learn/hsk/1" className="btn btn-primary shadow-lg">
-            Vào HSK 1 ngay
+          <Link href={startHref} className="btn btn-primary shadow-lg">
+            {pinyin ? "Bắt đầu từ phát âm" : "Vào HSK 1 ngay"}
           </Link>
         </header>
 
@@ -53,19 +66,33 @@ export default function LearnHubPage() {
           {courses.map((c) => {
             const soon = c.coming_soon && !c.published;
             const pct = c.progress_percent ?? 0;
+            const preHsk = c.slug === "pinyin" || c.hsk_level === 0;
             const card = (
               <article
                 className={`group relative overflow-hidden rounded-md border border-[var(--line)] bg-white shadow-md transition ${
                   soon ? "opacity-70" : "hover:-translate-y-1 hover:border-[var(--orange)] hover:shadow-xl"
                 }`}
               >
-                <div className="flex h-36 items-center justify-center bg-gradient-to-br from-[var(--navy)] to-[#003399]">
+                <div
+                  className={`flex h-36 items-center justify-center ${
+                    preHsk
+                      ? "bg-gradient-to-br from-[var(--orange-dark)] to-[var(--navy)]"
+                      : "bg-gradient-to-br from-[var(--navy)] to-[#003399]"
+                  }`}
+                >
                   <span className="font-display text-5xl font-bold tracking-wide text-white">
-                    HSK {c.hsk_level}
+                    {courseBadge(c)}
                   </span>
                 </div>
                 <div className="space-y-3 p-4">
-                  <p className="font-display text-lg font-bold uppercase text-[var(--navy)]">{c.title}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-display text-lg font-bold uppercase text-[var(--navy)]">{c.title}</p>
+                    {preHsk && (
+                      <span className="rounded-sm bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--orange-dark)]">
+                        Trước HSK 1
+                      </span>
+                    )}
+                  </div>
                   <p className="line-clamp-2 text-sm text-[var(--muted)]">{c.description || c.title_en}</p>
                   {!soon ? (
                     <>
@@ -91,7 +118,7 @@ export default function LearnHubPage() {
             );
             if (soon) return <div key={c.id}>{card}</div>;
             return (
-              <Link key={c.id} href={`/learn/hsk/${c.hsk_level}`}>
+              <Link key={c.id} href={courseHref(c)}>
                 {card}
               </Link>
             );

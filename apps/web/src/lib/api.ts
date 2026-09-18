@@ -28,6 +28,12 @@ export type Vocab = {
   example_vi?: string | null;
   image_url?: string | null;
   frequency?: number | null;
+  topic?: string | null;
+};
+
+export type VocabTopic = {
+  topic: string;
+  count: number;
 };
 
 export type Card = {
@@ -262,12 +268,21 @@ export const api = {
   googleStatus: () => request<{ enabled: boolean }>("/api/auth/google/status"),
   googleStartUrl: () => `${API_URL}/api/auth/google/start`,
   home: () => request<HomeData>("/api/home"),
-  vocab: (params?: { hsk_level?: number; q?: string }) => {
+  vocab: (params?: { hsk_level?: number; topic?: string; q?: string; limit?: number; offset?: number }) => {
     const sp = new URLSearchParams();
     if (params?.hsk_level) sp.set("hsk_level", String(params.hsk_level));
+    if (params?.topic) sp.set("topic", params.topic);
     if (params?.q) sp.set("q", params.q);
+    sp.set("limit", String(params?.limit ?? 500));
+    if (params?.offset) sp.set("offset", String(params.offset));
     const qs = sp.toString();
     return request<Vocab[]>(`/api/vocab${qs ? `?${qs}` : ""}`);
+  },
+  vocabTopics: (hsk_level?: number) => {
+    const sp = new URLSearchParams();
+    if (hsk_level) sp.set("hsk_level", String(hsk_level));
+    const qs = sp.toString();
+    return request<VocabTopic[]>(`/api/vocab/topics${qs ? `?${qs}` : ""}`);
   },
   dueCards: () => request<Card[]>("/api/cards/due"),
   reviewCard: (id: number, rating: "again" | "hard" | "good" | "easy") =>
@@ -328,10 +343,11 @@ export const api = {
       request<User>(`/api/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(body) }),
     deleteUser: (id: number) =>
       request<{ ok: boolean }>(`/api/admin/users/${id}`, { method: "DELETE" }),
-    vocab: (params?: { q?: string; hsk_level?: number; page?: number; page_size?: number }) => {
+    vocab: (params?: { q?: string; hsk_level?: number; topic?: string; page?: number; page_size?: number }) => {
       const sp = new URLSearchParams();
       if (params?.q) sp.set("q", params.q);
       if (params?.hsk_level) sp.set("hsk_level", String(params.hsk_level));
+      if (params?.topic) sp.set("topic", params.topic);
       if (params?.page) sp.set("page", String(params.page));
       if (params?.page_size) sp.set("page_size", String(params.page_size));
       const qs = sp.toString();
@@ -523,16 +539,112 @@ export function mediaUrl(path?: string | null): string | undefined {
   return `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/** Prefer a stable local Mandarin voice (Microsoft on Windows); avoid remote/Google voices. */
+function pickZhVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const scored = voices
+    .filter((v) => v.lang.toLowerCase().startsWith("zh") || v.lang.toLowerCase().startsWith("cmn"))
+    .map((v) => {
+      const name = v.name.toLowerCase();
+      let score = 0;
+      if (v.localService) score += 15;
+      if (v.lang.toLowerCase().includes("zh-cn") || v.lang.toLowerCase() === "zh") score += 10;
+      if (name.includes("huihui") || name.includes("yaoyao") || name.includes("kangkang")) score += 10;
+      if (name.includes("microsoft")) score += 5;
+      if (name.includes("google")) score -= 30;
+      return { v, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scored[0]?.v ?? null;
+}
+
+let _zhVoice: SpeechSynthesisVoice | null = null;
+
+function warmVoices() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const apply = () => {
+    _zhVoice = pickZhVoice();
+  };
+  apply();
+  window.speechSynthesis.addEventListener("voiceschanged", apply);
+}
+
+if (typeof window !== "undefined") {
+  warmVoices();
+}
+
+let _retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Browser speechSynthesis. Chrome/Edge on Windows randomly clip the first
+ * syllable of an utterance — a long-standing engine bug (not fixable from
+ * text alone). The known workaround is to call pause()+resume() right after
+ * speak(): it forces the engine to flush its buffer instead of silently
+ * eating the onset. We also retry once if "start" never fires.
+ */
 export function speakZh(text: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const raw = (text || "").trim();
+  if (!raw) return;
+
+  const synth = window.speechSynthesis;
+  if (!_zhVoice) _zhVoice = pickZhVoice();
+
+  if (_retryTimer) {
+    clearTimeout(_retryTimer);
+    _retryTimer = null;
+  }
+  if (synth.speaking || synth.pending) {
+    try {
+      synth.cancel();
+    } catch {
+      /* ignore */
+    }
+  }
+  try {
+    if (synth.paused) synth.resume();
+  } catch {
+    /* ignore */
+  }
+
+  const chars = [...raw].length;
+  const u = new SpeechSynthesisUtterance(raw);
   u.lang = "zh-CN";
-  u.rate = 0.9;
-  const voices = window.speechSynthesis.getVoices();
-  const zh = voices.find((v) => v.lang.toLowerCase().startsWith("zh"));
-  if (zh) u.voice = zh;
-  window.speechSynthesis.speak(u);
+  u.rate = chars <= 2 ? 0.75 : chars <= 6 ? 0.85 : 0.95;
+  u.pitch = 1;
+  u.volume = 1;
+  if (_zhVoice) u.voice = _zhVoice;
+
+  let started = false;
+  u.onstart = () => {
+    started = true;
+  };
+
+  synth.speak(u);
+
+  // Chrome/Edge bug workaround: pause+resume right after speak() forces the
+  // engine to flush its audio buffer instead of dropping the first syllable.
+  try {
+    synth.pause();
+    synth.resume();
+  } catch {
+    /* ignore */
+  }
+
+  // If speech never actually starts (another known flake), retry once.
+  _retryTimer = setTimeout(() => {
+    _retryTimer = null;
+    if (!started && !synth.speaking) {
+      try {
+        synth.cancel();
+        synth.speak(u);
+      } catch {
+        /* ignore */
+      }
+    }
+  }, 300);
 }
 
 export function isAdminRole(role?: string | null) {

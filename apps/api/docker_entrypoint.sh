@@ -20,6 +20,8 @@ try:
 
     with engine.begin() as conn:
         conn.execute(text("ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS image_url VARCHAR(512)"))
+        conn.execute(text("ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS topic VARCHAR(64)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_vocabulary_topic ON vocabulary (topic)"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) DEFAULT 'user'"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(32) DEFAULT 'free'"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_sub VARCHAR(128)"))

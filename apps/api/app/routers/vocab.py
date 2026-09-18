@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from app.deps import CurrentUser, DbSession, award_xp, touch_streak
 from app.models import UserCard, Vocabulary
-from app.schemas import CardOut, ReviewRequest, VocabOut
+from app.schemas import CardOut, ReviewRequest, VocabOut, VocabTopicOut
 from app.services.fsrs_service import ensure_cards_for_user, get_or_create_mission, review_card
 
 router = APIRouter(tags=["vocab"])
@@ -17,13 +17,16 @@ def list_vocab(
     db: DbSession,
     user: CurrentUser,
     hsk_level: int | None = None,
+    topic: str | None = None,
     q: str | None = None,
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
     query = db.query(Vocabulary)
     if hsk_level is not None:
         query = query.filter(Vocabulary.hsk_level == hsk_level)
+    if topic:
+        query = query.filter(Vocabulary.topic == topic)
     if q:
         like = f"%{q}%"
         query = query.filter(
@@ -40,6 +43,17 @@ def list_vocab(
         .all()
     )
     return rows
+
+
+@router.get("/vocab/topics", response_model=list[VocabTopicOut])
+def list_vocab_topics(db: DbSession, user: CurrentUser, hsk_level: int | None = None):
+    from sqlalchemy import func
+
+    query = db.query(Vocabulary.topic, func.count(Vocabulary.id)).filter(Vocabulary.topic.isnot(None))
+    if hsk_level is not None:
+        query = query.filter(Vocabulary.hsk_level == hsk_level)
+    rows = query.group_by(Vocabulary.topic).order_by(func.count(Vocabulary.id).desc()).all()
+    return [VocabTopicOut(topic=t, count=c) for t, c in rows]
 
 
 @router.get("/cards/due", response_model=list[CardOut])
