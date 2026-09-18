@@ -12,7 +12,8 @@ COPY apps/api/app ./app
 COPY apps/api/docker_entrypoint.sh ./docker_entrypoint.sh
 COPY data ./data
 COPY scripts ./scripts
-RUN chmod +x docker_entrypoint.sh
+# Windows checkouts often copy CRLF; strip so Linux can exec the shebang.
+RUN sed -i 's/\r$//' docker_entrypoint.sh && chmod +x docker_entrypoint.sh
 
 ENV PYTHONPATH=/app
 ENV PORT=8000

@@ -4,6 +4,7 @@ from app.deps import CurrentUser, DbSession, award_xp, touch_streak
 from app.schemas import CompleteMissionTaskRequest, HomeOut, MissionOut, MissionTask, UserOut
 from app.services.fsrs_service import ensure_cards_for_user, get_or_create_mission
 from app.models import UserCard
+from app.routers.vocab import daily_review_stats
 from datetime import datetime, timezone
 
 router = APIRouter(tags=["home"])
@@ -19,10 +20,18 @@ def home(db: DbSession, user: CurrentUser) -> HomeOut:
         .filter(UserCard.user_id == user.id, UserCard.due <= now)
         .count()
     )
+    learned_count = (
+        db.query(UserCard).filter(UserCard.user_id == user.id, UserCard.reps >= 1).count()
+    )
+    daily_count, daily_ready = daily_review_stats(db, user.id)
     tip = (
-        "Hôm nay hãy luyện Listening 5 phút — nghe yếu sẽ kéo chậm khi nói với sếp."
-        if due_count < 5
-        else f"Bạn có {due_count} thẻ đến hạn. Ôn nhanh trước khi học từ mới."
+        f"Đã học {learned_count} từ. Ôn nhanh 5 từ gần nhất để nhớ lâu hơn."
+        if daily_ready
+        else (
+            "Hôm nay hãy luyện Listening 5 phút — nghe yếu sẽ kéo chậm khi nói với sếp."
+            if due_count < 5
+            else f"Bạn có {due_count} thẻ đến hạn. Ôn nhanh trước khi học từ mới."
+        )
     )
     return HomeOut(
         user=UserOut.model_validate(user),
@@ -34,8 +43,11 @@ def home(db: DbSession, user: CurrentUser) -> HomeOut:
             xp_awarded=mission.xp_awarded,
         ),
         due_count=due_count,
-        continue_track="hsk" if due_count else "work",
+        continue_track="hsk" if due_count or daily_ready else "work",
         tip=tip,
+        learned_count=learned_count,
+        daily_review_ready=daily_ready,
+        daily_review_count=min(5, daily_count) if daily_ready else 0,
     )
 
 

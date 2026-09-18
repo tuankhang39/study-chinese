@@ -17,16 +17,24 @@ const quickModules = [
   },
   {
     href: "/flashcards",
-    title: "Flashcard FSRS",
-    desc: "Ôn thẻ đến hạn — nhớ lâu, quên chậm.",
-    count: "Hôm nay",
+    title: "Flashcard",
+    desc: "HSK → chủ đề → ôn thẻ. Nhắc ôn 5 từ sau 1 ngày.",
+    count: "Bộ thẻ",
     icon: "卡",
     accent: "orange" as const,
   },
   {
+    href: "/vocab/learned",
+    title: "Từ đã học",
+    desc: "Kho từ đã ôn bằng flashcard — ôn lại bất cứ lúc nào.",
+    count: "Kho từ",
+    icon: "记",
+    accent: "navy" as const,
+  },
+  {
     href: "/vocab",
     title: "Từ vựng HSK",
-    desc: "Danh sách theo cấp, nghe TTS từng từ.",
+    desc: "Danh sách theo cấp & chủ đề, nghe TTS từng từ.",
     count: "600+ từ",
     icon: "词",
     accent: "navy" as const,
@@ -63,7 +71,8 @@ export default function HomePage() {
   if (error) return <p className="text-[var(--danger)]">{error}</p>;
   if (!data) return <p className="text-[var(--muted)]">Đang tải…</p>;
 
-  const { user, mission, due_count, tip } = data;
+  const { user, mission, due_count, tip, daily_review_ready, daily_review_count, learned_count } =
+    data;
   const doneCount = mission.tasks.filter((t) => t.done).length;
 
   return (
@@ -96,12 +105,28 @@ export default function HomePage() {
               <span className="text-[var(--orange)]">{user.display_name}?</span>
             </h1>
             <p className="mt-4 max-w-md text-[var(--muted)]">
-              Hoàn thành nhiệm vụ hôm nay để giữ streak và mở khóa XP. Còn{" "}
-              <strong className="text-[var(--navy)]">{due_count} thẻ</strong> đang chờ ôn.
+              Hoàn thành nhiệm vụ hôm nay để giữ streak và mở khóa XP. Đã học{" "}
+              <strong className="text-[var(--navy)]">{learned_count ?? 0} từ</strong>
+              {due_count ? (
+                <>
+                  {" "}
+                  · <strong className="text-[var(--navy)]">{due_count} thẻ</strong> đến hạn
+                </>
+              ) : null}
+              .
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/flashcards" className="btn btn-primary">
-                Tiếp tục học
+              {daily_review_ready ? (
+                <Link href="/flashcards?mode=daily" className="btn btn-primary">
+                  Ôn {daily_review_count || 5} từ gần nhất
+                </Link>
+              ) : (
+                <Link href="/flashcards" className="btn btn-primary">
+                  Học flashcard
+                </Link>
+              )}
+              <Link href="/vocab/learned" className="btn btn-ghost">
+                Từ đã học
               </Link>
               <Link href="/work" className="btn btn-navy">
                 Luyện hội thoại

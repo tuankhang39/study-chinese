@@ -68,9 +68,11 @@ def _run_seed() -> dict:
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
 
-    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        # Bulk seed can exceed the default API statement_timeout.
+        db.execute(text("SET LOCAL statement_timeout = '120s'"))
+        db.execute(text("SET LOCAL lock_timeout = '3s'"))
         # Skip writing license file on read-only containers
         v = mod.seed_vocab(db)
         s = mod.seed_scenarios(db)

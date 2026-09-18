@@ -43,6 +43,34 @@ export type Card = {
   lapses: number;
   state: number;
   vocab: Vocab;
+  last_review?: string | null;
+};
+
+export type DeckTopic = {
+  topic: string;
+  total: number;
+  learned: number;
+};
+
+export type DeckHsk = {
+  hsk_level: number;
+  total: number;
+  learned: number;
+  topics: DeckTopic[];
+};
+
+export type Decks = {
+  hsk: DeckHsk[];
+  learned_total: number;
+  daily_review_ready: boolean;
+  daily_review_count: number;
+};
+
+export type LearnedCard = {
+  id: number;
+  reps: number;
+  last_review?: string | null;
+  vocab: Vocab;
 };
 
 export type MissionTask = {
@@ -68,6 +96,9 @@ export type HomeData = {
   due_count: number;
   continue_track: "hsk" | "work";
   tip: string;
+  learned_count?: number;
+  daily_review_ready?: boolean;
+  daily_review_count?: number;
 };
 
 export type Scenario = {
@@ -284,7 +315,26 @@ export const api = {
     const qs = sp.toString();
     return request<VocabTopic[]>(`/api/vocab/topics${qs ? `?${qs}` : ""}`);
   },
-  dueCards: () => request<Card[]>("/api/cards/due"),
+  dueCards: (params?: { hsk_level?: number; topic?: string; limit?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.hsk_level) sp.set("hsk_level", String(params.hsk_level));
+    if (params?.topic) sp.set("topic", params.topic);
+    if (params?.limit) sp.set("limit", String(params.limit));
+    const qs = sp.toString();
+    return request<Card[]>(`/api/cards/due${qs ? `?${qs}` : ""}`);
+  },
+  cardDecks: () => request<Decks>("/api/cards/decks"),
+  learnedCards: (params?: { hsk_level?: number; topic?: string; limit?: number; offset?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.hsk_level) sp.set("hsk_level", String(params.hsk_level));
+    if (params?.topic) sp.set("topic", params.topic);
+    if (params?.limit) sp.set("limit", String(params.limit));
+    if (params?.offset) sp.set("offset", String(params.offset));
+    const qs = sp.toString();
+    return request<LearnedCard[]>(`/api/cards/learned${qs ? `?${qs}` : ""}`);
+  },
+  dailyReviewCards: (limit = 5) =>
+    request<Card[]>(`/api/cards/daily-review?limit=${limit}`),
   reviewCard: (id: number, rating: "again" | "hard" | "good" | "easy") =>
     request<Card>(`/api/cards/${id}/review`, {
       method: "POST",

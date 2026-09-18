@@ -296,12 +296,20 @@ def ensure_image_column() -> None:
     """Keep nullable image_url column for future use (not populated)."""
     from sqlalchemy import text
 
-    with engine.begin() as conn:
-        conn.execute(
+    with engine.connect() as conn:
+        exists = conn.execute(
             text(
-                "ALTER TABLE vocabulary ADD COLUMN IF NOT EXISTS image_url VARCHAR(512)"
+                "SELECT 1 FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = 'vocabulary' "
+                "AND column_name = 'image_url'"
             )
-        )
+        ).scalar()
+        if exists:
+            return
+        # Avoid racing with live API traffic (AccessExclusiveLock).
+        conn.execute(text("SET lock_timeout = '3s'"))
+        conn.execute(text("ALTER TABLE vocabulary ADD COLUMN image_url VARCHAR(512)"))
+        conn.commit()
 
 
 def seed_vocab(db) -> int:

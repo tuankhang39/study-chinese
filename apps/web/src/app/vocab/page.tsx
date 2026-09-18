@@ -1,40 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Pagination } from "@/components/admin/Pagination";
 import { api, Vocab, VocabTopic, speakZh } from "@/lib/api";
+import { flashcardsHref, topicIcon, topicLabel } from "@/lib/topics";
 
 const PAGE_SIZE = 24;
-
-const TOPIC_META: Record<string, { label: string; icon: string }> = {
-  greeting: { label: "Chào hỏi & Giao tiếp", icon: "👋" },
-  pronoun: { label: "Đại từ & Từ hỏi", icon: "🙋" },
-  number: { label: "Số & Lượng từ", icon: "🔢" },
-  time: { label: "Thời gian", icon: "🕒" },
-  family: { label: "Gia đình & Con người", icon: "👨‍👩‍👧" },
-  body: { label: "Cơ thể & Sức khỏe", icon: "🩺" },
-  food: { label: "Ăn uống", icon: "🍜" },
-  house: { label: "Nhà cửa & Đồ vật", icon: "🏠" },
-  place: { label: "Nơi chốn & Giao thông", icon: "🚌" },
-  direction: { label: "Phương hướng & Vị trí", icon: "🧭" },
-  nature: { label: "Thời tiết & Tự nhiên", icon: "🌤️" },
-  emotion: { label: "Cảm xúc", icon: "😊" },
-  adjective: { label: "Tính từ mô tả", icon: "✨" },
-  entertainment: { label: "Giải trí & Thể thao", icon: "🎬" },
-  school: { label: "Trường học & Học tập", icon: "📚" },
-  work: { label: "Công việc & Đi làm", icon: "💼" },
-  verb: { label: "Động từ thông dụng", icon: "🏃" },
-  grammar: { label: "Ngữ pháp & Từ nối", icon: "🔗" },
-  other: { label: "Khác", icon: "🔖" },
-};
-
-function topicLabel(id: string): string {
-  return TOPIC_META[id]?.label || id;
-}
-
-function topicIcon(id: string): string {
-  return TOPIC_META[id]?.icon || "🔖";
-}
 
 export default function VocabPage() {
   const [level, setLevel] = useState<number | undefined>(1);
@@ -73,15 +45,23 @@ export default function VocabPage() {
     () => items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [items, page]
   );
+  const studyHref = topic
+    ? flashcardsHref({ hsk_level: level, topic })
+    : flashcardsHref({ hsk_level: level });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl">Từ vựng HSK</h1>
-        <p className="text-[var(--muted)]">
-          Danh sách theo cấp · nghĩa tiếng Việt · {items.length} từ
-          {totalForLevel ? ` (tổng ${totalForLevel} từ ở cấp này)` : ""}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl">Từ vựng HSK</h1>
+          <p className="text-[var(--muted)]">
+            Danh sách theo cấp · nghĩa tiếng Việt · {items.length} từ
+            {totalForLevel ? ` (tổng ${totalForLevel} từ ở cấp này)` : ""}
+          </p>
+        </div>
+        <Link href={studyHref} className="btn btn-primary shrink-0">
+          {topic ? `Ôn flashcard · ${topicLabel(topic)}` : level ? `Flashcard HSK ${level}` : "Flashcard"}
+        </Link>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -131,17 +111,25 @@ export default function VocabPage() {
             🗂️ Tất cả chủ đề
           </button>
           {topics.map((t) => (
-            <button
-              key={t.topic}
-              onClick={() => setTopic(t.topic === topic ? undefined : t.topic)}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                topic === t.topic
-                  ? "bg-[var(--navy)] text-white"
-                  : "bg-[var(--bg-soft)] text-[var(--muted)] hover:bg-[var(--accent-soft)]"
-              }`}
-            >
-              {topicIcon(t.topic)} {topicLabel(t.topic)} · {t.count}
-            </button>
+            <div key={t.topic} className="flex shrink-0 items-center gap-1">
+              <button
+                onClick={() => setTopic(t.topic === topic ? undefined : t.topic)}
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                  topic === t.topic
+                    ? "bg-[var(--navy)] text-white"
+                    : "bg-[var(--bg-soft)] text-[var(--muted)] hover:bg-[var(--accent-soft)]"
+                }`}
+              >
+                {topicIcon(t.topic)} {topicLabel(t.topic)} · {t.count}
+              </button>
+              <Link
+                href={flashcardsHref({ hsk_level: level, topic: t.topic })}
+                title={`Ôn flashcard: ${topicLabel(t.topic)}`}
+                className="rounded-full border border-[var(--line)] px-2 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                Thẻ
+              </Link>
+            </div>
           ))}
         </div>
       )}

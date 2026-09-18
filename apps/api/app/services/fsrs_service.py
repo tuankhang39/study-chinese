@@ -44,16 +44,26 @@ def apply_card_to_model(model: UserCard, card: Card) -> None:
     model.last_review = card.last_review
 
 
-def ensure_cards_for_user(db: Session, user_id: int, limit: int = 50, hsk_max: int = 3) -> int:
+def ensure_cards_for_user(
+    db: Session,
+    user_id: int,
+    limit: int = 50,
+    hsk_max: int = 3,
+    hsk_level: int | None = None,
+    topic: str | None = None,
+) -> int:
     existing = {
         row[0]
         for row in db.query(UserCard.vocab_id).filter(UserCard.user_id == user_id).all()
     }
-    vocab_q = (
-        db.query(Vocabulary)
-        .filter(Vocabulary.hsk_level <= hsk_max)
-        .order_by(Vocabulary.hsk_level, Vocabulary.frequency.nulls_last(), Vocabulary.id)
-    )
+    vocab_q = db.query(Vocabulary)
+    if hsk_level is not None:
+        vocab_q = vocab_q.filter(Vocabulary.hsk_level == hsk_level)
+    else:
+        vocab_q = vocab_q.filter(Vocabulary.hsk_level <= hsk_max)
+    if topic:
+        vocab_q = vocab_q.filter(Vocabulary.topic == topic)
+    vocab_q = vocab_q.order_by(Vocabulary.hsk_level, Vocabulary.frequency.nulls_last(), Vocabulary.id)
     created = 0
     now = datetime.now(timezone.utc)
     for vocab in vocab_q:

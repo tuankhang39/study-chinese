@@ -1,0 +1,2 @@
+*.sh text eol=lf
+apps/api/docker_entrypoint.sh text eol=lf

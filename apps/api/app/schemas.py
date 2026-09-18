@@ -178,6 +178,7 @@ class CardOut(BaseModel):
     lapses: int
     state: int
     vocab: VocabOut
+    last_review: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -185,6 +186,36 @@ class CardOut(BaseModel):
 
 class ReviewRequest(BaseModel):
     rating: Literal["again", "hard", "good", "easy"]
+
+
+class DeckTopicOut(BaseModel):
+    topic: str
+    total: int
+    learned: int
+
+
+class DeckHskOut(BaseModel):
+    hsk_level: int
+    total: int
+    learned: int
+    topics: list[DeckTopicOut]
+
+
+class DecksOut(BaseModel):
+    hsk: list[DeckHskOut]
+    learned_total: int
+    daily_review_ready: bool
+    daily_review_count: int
+
+
+class LearnedCardOut(BaseModel):
+    id: int
+    reps: int
+    last_review: Optional[datetime] = None
+    vocab: VocabOut
+
+    class Config:
+        from_attributes = True
 
 
 class MissionTask(BaseModel):
@@ -264,6 +295,9 @@ class HomeOut(BaseModel):
     due_count: int
     continue_track: Literal["hsk", "work"]
     tip: str
+    learned_count: int = 0
+    daily_review_ready: bool = False
+    daily_review_count: int = 0
 
 
 # ---- Curriculum / Giáo trình ----

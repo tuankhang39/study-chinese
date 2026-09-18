@@ -62,19 +62,19 @@ export default function LearnHubPage() {
 
         {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => {
             const soon = c.coming_soon && !c.published;
             const pct = c.progress_percent ?? 0;
             const preHsk = c.slug === "pinyin" || c.hsk_level === 0;
             const card = (
               <article
-                className={`group relative overflow-hidden rounded-md border border-[var(--line)] bg-white shadow-md transition ${
+                className={`group relative flex h-full flex-col overflow-hidden rounded-md border border-[var(--line)] bg-white shadow-md transition ${
                   soon ? "opacity-70" : "hover:-translate-y-1 hover:border-[var(--orange)] hover:shadow-xl"
                 }`}
               >
                 <div
-                  className={`flex h-36 items-center justify-center ${
+                  className={`flex h-36 shrink-0 items-center justify-center ${
                     preHsk
                       ? "bg-gradient-to-br from-[var(--orange-dark)] to-[var(--navy)]"
                       : "bg-gradient-to-br from-[var(--navy)] to-[#003399]"
@@ -84,7 +84,7 @@ export default function LearnHubPage() {
                     {courseBadge(c)}
                   </span>
                 </div>
-                <div className="space-y-3 p-4">
+                <div className="flex flex-1 flex-col space-y-3 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-display text-lg font-bold uppercase text-[var(--navy)]">{c.title}</p>
                     {preHsk && (
@@ -93,32 +93,42 @@ export default function LearnHubPage() {
                       </span>
                     )}
                   </div>
-                  <p className="line-clamp-2 text-sm text-[var(--muted)]">{c.description || c.title_en}</p>
-                  {!soon ? (
-                    <>
-                      <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-                        <div
-                          className="h-full rounded-full bg-[var(--orange)] transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-xs font-semibold">
-                        <span className="text-[var(--muted)]">{c.lesson_count ?? 0} bài</span>
-                        <span className="text-[var(--navy)]">{pct}% hoàn thành</span>
-                      </div>
-                      <span className="btn btn-navy w-full text-xs">Vào học →</span>
-                    </>
-                  ) : (
-                    <p className="rounded-sm bg-[var(--bg-soft)] px-3 py-2 text-center text-xs font-bold uppercase text-[var(--muted)]">
-                      Sắp mở
-                    </p>
-                  )}
+                  <p className="line-clamp-2 min-h-[2.5rem] text-sm text-[var(--muted)]">
+                    {c.description || c.title_en}
+                  </p>
+                  <div className="mt-auto space-y-3 pt-1">
+                    {!soon ? (
+                      <>
+                        <div className="h-2 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                          <div
+                            className="h-full rounded-full bg-[var(--orange)] transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-xs font-semibold">
+                          <span className="text-[var(--muted)]">{c.lesson_count ?? 0} bài</span>
+                          <span className="text-[var(--navy)]">{pct}% hoàn thành</span>
+                        </div>
+                        <span className="btn btn-navy w-full text-xs">Vào học →</span>
+                      </>
+                    ) : (
+                      <p className="rounded-sm bg-[var(--bg-soft)] px-3 py-2 text-center text-xs font-bold uppercase text-[var(--muted)]">
+                        Sắp mở
+                      </p>
+                    )}
+                  </div>
                 </div>
               </article>
             );
-            if (soon) return <div key={c.id}>{card}</div>;
+            if (soon) {
+              return (
+                <div key={c.id} className="h-full">
+                  {card}
+                </div>
+              );
+            }
             return (
-              <Link key={c.id} href={courseHref(c)}>
+              <Link key={c.id} href={courseHref(c)} className="block h-full">
                 {card}
               </Link>
             );
