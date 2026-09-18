@@ -1,0 +1,27 @@
+---
+description: Deploy/seed on Render free + pinyin/vocab project knowledge
+alwaysApply: true
+---
+
+# Render free + seed data
+
+- Render **free** has **no SSH** and often **no Shell**. Do not tell the user to SSH.
+- After code that needs one-shot DB data (pinyin lessons, vocab topics), use HTTP:
+
+```bash
+curl -X POST "https://hoctiengtrung-api.onrender.com/api/admin/seed-pinyin-topics" \
+  -H "x-bootstrap-secret: <BOOTSTRAP_SECRET from Render Environment>"
+```
+
+- Endpoint: `POST /api/admin/seed-pinyin-topics` in `apps/api/app/routers/admin.py` (header `x-bootstrap-secret`).
+- Auto-deploy: push to `main` → Vercel (web) + Render (API Docker). Entry point adds `vocabulary.topic` if missing; it does **not** run pinyin/topic seed scripts.
+- Local External DB URL must be:
+  `postgresql+psycopg2://USER:PASS@HOST/DBNAME?sslmode=require`
+  Wrong URL parsing often shows `database "hoctiengtrung://..." does not exist`.
+
+# Curriculum / vocab facts
+
+- Pre-HSK course slug `pinyin`, `hsk_level=0`, **5** phonics lessons (not one mega-lesson). Seed: `scripts/seed_pinyin_course.py`.
+- Vocab has `topic`; tag with `scripts/tag_vocab_topics.py`. UI: `/vocab` topic chips + pagination.
+- HSK1 stays 15 lessons; do not inject pinyin into HSK1 numbering.
+- When calling `pipeline_for_type("phonics_focus")` for pinyin course, omit `lesson_number` so HSK1 `tongue_twister` extras do not apply.
