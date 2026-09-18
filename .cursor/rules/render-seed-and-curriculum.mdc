@@ -1,27 +1,46 @@
 ---
-description: Deploy/seed on Render free + pinyin/vocab project knowledge
+description: Session knowledge — pinyin course, vocab topics, TTS, Render free deploy
 alwaysApply: true
 ---
 
-# Render free + seed data
+# Session deliverables (keep current)
 
-- Render **free** has **no SSH** and often **no Shell**. Do not tell the user to SSH.
-- After code that needs one-shot DB data (pinyin lessons, vocab topics), use HTTP:
+## 1. Phát âm nền = 5 bài (không gộp 1 bài)
+
+- Course slug `pinyin`, `hsk_level=0`, `sort_order=0`, trước HSK1.
+- Seed idempotent: `scripts/seed_pinyin_course.py` (alias cũ `seed_hsk1_phonics_lesson.py`).
+- Lessons: (1) Nhập môn & mẹo (2) Thanh mẫu dễ bpmf/dtnl/gkh (3) Thanh mẫu khó jqx/zhchshr/zcs (4) Vận mẫu & ghép âm (5) Thanh điệu & ôn tập.
+- Unlock `sequential` giữa 5 bài; HSK1 vẫn **15** bài, không nhét phonics vào HSK1.
+- Routes: `/learn/course/[slug]`, player shared `LessonPlayerClient`.
+- Bug: `pipeline_for_type("phonics_focus")` **không** truyền `lesson_number` (tránh `HSK1_EXTRA_STEPS` tongue_twister).
+- Xóa lesson cũ: xóa `LessonProgress` trước (FK NOT NULL).
+
+## 2. Từ vựng theo topic + pagination
+
+- Column `vocabulary.topic` — migration `0006_vocab_topic.py`; entrypoint cũng `ADD COLUMN IF NOT EXISTS`.
+- Tag: `scripts/tag_vocab_topics.py` (~19 topics). API: `GET /vocab?topic=`, `GET /vocab/topics`, admin filter `topic`.
+- UI `/vocab`: HSK pills + topic chips **flex-wrap** (không scroll ngang) + client pagination 24/page.
+- `Pagination` (`apps/web/src/components/admin/Pagination.tsx`): số trang + ellipsis + dropdown nếu >8 trang.
+- Nguyên nhân “chỉ vài từ”: API default limit 50; client giờ `limit=500`.
+
+## 3. TTS browser
+
+- Dùng `speechSynthesis` (không edge-tts/Google server). Chrome hay cắt âm đầu — workaround pause/resume; vẫn flake tùy lúc.
+
+## 4. Render free deploy / seed
+
+- Free: **không SSH**, thường **không Shell**.
+- Push `main` → Vercel (web) + Render API auto-build. Entry point **không** chạy seed pinyin/topics.
+- Seed production (sau deploy Live):
 
 ```bash
 curl -X POST "https://hoctiengtrung-api.onrender.com/api/admin/seed-pinyin-topics" \
-  -H "x-bootstrap-secret: <BOOTSTRAP_SECRET from Render Environment>"
+  -H "x-bootstrap-secret: <BOOTSTRAP_SECRET>"
 ```
 
-- Endpoint: `POST /api/admin/seed-pinyin-topics` in `apps/api/app/routers/admin.py` (header `x-bootstrap-secret`).
-- Auto-deploy: push to `main` → Vercel (web) + Render (API Docker). Entry point adds `vocabulary.topic` if missing; it does **not** run pinyin/topic seed scripts.
-- Local External DB URL must be:
-  `postgresql+psycopg2://USER:PASS@HOST/DBNAME?sslmode=require`
-  Wrong URL parsing often shows `database "hoctiengtrung://..." does not exist`.
+- Endpoint: `POST /api/admin/seed-pinyin-topics` (`apps/api/app/routers/admin.py`).
+- Local External DB: `postgresql+psycopg2://USER:PASS@HOST/DB?sslmode=require` — URL sai → lỗi `database "hoctiengtrung://..." does not exist`.
 
-# Curriculum / vocab facts
+## 5. Vocab counts (local/prod seed)
 
-- Pre-HSK course slug `pinyin`, `hsk_level=0`, **5** phonics lessons (not one mega-lesson). Seed: `scripts/seed_pinyin_course.py`.
-- Vocab has `topic`; tag with `scripts/tag_vocab_topics.py`. UI: `/vocab` topic chips + pagination.
-- HSK1 stays 15 lessons; do not inject pinyin into HSK1 numbering.
-- When calling `pipeline_for_type("phonics_focus")` for pinyin course, omit `lesson_number` so HSK1 `tongue_twister` extras do not apply.
+- ~603 rows: HSK1≈150, HSK2≈149, HSK3≈304 — gần đủ HSK 1–3 chuẩn cũ; không seed ồ ạt thêm trừ khi thiếu rõ.
